@@ -1,0 +1,35 @@
+server:
+  port: 8093
+
+spring:
+  application:
+    name: blockchain-service
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+grpc:
+  server:
+    port: 9093
+
+blockchain:
+  ethereum:
+    mainnet-rpc: ${ETH_MAINNET_RPC:https://mainnet.infura.io/v3/your-api-key}
+    sepolia-rpc: ${ETH_SEPOLIA_RPC:https://sepolia.infura.io/v3/your-api-key}
+    mainnet-chain-id: 1
+    sepolia-chain-id: 11155111
+  polygon:
+    mainnet-rpc: ${POLYGON_MAINNET_RPC:https://polygon-rpc.com}
+    mumbai-rpc: ${POLYGON_MUMBAI_RPC:https://rpc-mumbai.maticvigil.com}
+    mainnet-chain-id: 137
+    mumbai-chain-id: 80001
+
+price:
+  coingecko-api: https://api.coingecko.com/api/v3
+  cache-ttl-seconds: 60
+
+logging:
+  level:
+    com.blockchain: DEBUG
+    org.web3j: INFO

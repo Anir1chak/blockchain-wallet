@@ -1,0 +1,158 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: blockchain_wallet_postgres
+    environment:
+      POSTGRES_USER: wallet_user
+      POSTGRES_PASSWORD: wallet_password
+      POSTGRES_DB: wallet_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wallet_user -d wallet_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blockchain_network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: blockchain_wallet_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blockchain_network
+
+  # Wallet Service (gRPC: 9091, HTTP: 8091)
+  wallet-service:
+    build:
+      context: ./backend/wallet-service
+      dockerfile: Dockerfile
+    container_name: wallet_service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/wallet_db
+      SPRING_DATASOURCE_USERNAME: wallet_user
+      SPRING_DATASOURCE_PASSWORD: wallet_password
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      GRPC_SERVER_PORT: 9091
+    ports:
+      - "8091:8091"
+      - "9091:9091"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - blockchain_network
+
+  # Transaction Service (gRPC: 9092, HTTP: 8092)
+  transaction-service:
+    build:
+      context: ./backend/transaction-service
+      dockerfile: Dockerfile
+    container_name: transaction_service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/wallet_db
+      SPRING_DATASOURCE_USERNAME: wallet_user
+      SPRING_DATASOURCE_PASSWORD: wallet_password
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      GRPC_SERVER_PORT: 9092
+      WALLET_SERVICE_ADDRESS: wallet-service:9091
+      BLOCKCHAIN_SERVICE_ADDRESS: blockchain-service:9093
+    ports:
+      - "8092:8092"
+      - "9092:9092"
+    depends_on:
+      - wallet-service
+      - blockchain-service
+    networks:
+      - blockchain_network
+
+  # Blockchain Service (gRPC: 9093, HTTP: 8093)
+  blockchain-service:
+    build:
+      context: ./backend/blockchain-service
+      dockerfile: Dockerfile
+    container_name: blockchain_service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      GRPC_SERVER_PORT: 9093
+      ETHEREUM_MAINNET_RPC: ${ETHEREUM_MAINNET_RPC:-https://eth-mainnet.g.alchemy.com/v2/demo}
+      ETHEREUM_SEPOLIA_RPC: ${ETHEREUM_SEPOLIA_RPC:-https://eth-sepolia.g.alchemy.com/v2/demo}
+      POLYGON_MAINNET_RPC: ${POLYGON_MAINNET_RPC:-https://polygon-rpc.com}
+      POLYGON_MUMBAI_RPC: ${POLYGON_MUMBAI_RPC:-https://rpc-mumbai.maticvigil.com}
+    ports:
+      - "8093:8093"
+      - "9093:9093"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - blockchain_network
+
+  # API Gateway (REST: 8080)
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: api_gateway
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      WALLET_SERVICE_ADDRESS: wallet-service:9091
+      TRANSACTION_SERVICE_ADDRESS: transaction-service:9092
+      BLOCKCHAIN_SERVICE_ADDRESS: blockchain-service:9093
+    ports:
+      - "8080:8080"
+    depends_on:
+      - wallet-service
+      - transaction-service
+      - blockchain-service
+    networks:
+      - blockchain_network
+
+  # Frontend (React)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: wallet_frontend
+    environment:
+      VITE_API_URL: http://localhost:8080/api
+      VITE_WS_URL: ws://localhost:8080/ws
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - blockchain_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  blockchain_network:
+    driver: bridge

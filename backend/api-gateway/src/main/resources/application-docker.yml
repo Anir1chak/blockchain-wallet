@@ -1,0 +1,43 @@
+spring:
+  profiles:
+    active: docker
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+server:
+  port: 8080
+
+grpc:
+  client:
+    wallet-service:
+      address: static://${WALLET_SERVICE_ADDRESS:wallet-service:9091}
+      negotiationType: plaintext
+    transaction-service:
+      address: static://${TRANSACTION_SERVICE_ADDRESS:transaction-service:9092}
+      negotiationType: plaintext
+    blockchain-service:
+      address: static://${BLOCKCHAIN_SERVICE_ADDRESS:blockchain-service:9093}
+      negotiationType: plaintext
+
+cors:
+  allowed-origins: http://localhost:3000,http://frontend:80
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+  allowed-headers: "*"
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.wallet: DEBUG
+    net.devh.boot.grpc: INFO

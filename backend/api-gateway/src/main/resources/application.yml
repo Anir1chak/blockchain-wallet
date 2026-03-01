@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+grpc:
+  client:
+    wallet-service:
+      address: static://${WALLET_SERVICE_HOST:localhost}:${WALLET_SERVICE_GRPC_PORT:9091}
+      negotiationType: plaintext
+    transaction-service:
+      address: static://${TRANSACTION_SERVICE_HOST:localhost}:${TRANSACTION_SERVICE_GRPC_PORT:9092}
+      negotiationType: plaintext
+    blockchain-service:
+      address: static://${BLOCKCHAIN_SERVICE_HOST:localhost}:${BLOCKCHAIN_SERVICE_GRPC_PORT:9093}
+      negotiationType: plaintext
+
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:5173}
+
+logging:
+  level:
+    com.blockchain: DEBUG

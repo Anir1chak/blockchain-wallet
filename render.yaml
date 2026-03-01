@@ -1,0 +1,112 @@
+# Render Blueprint - Deploy all services
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: postgres
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile.postgres
+    envVars:
+      - key: POSTGRES_USER
+        value: wallet_user
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+      - key: POSTGRES_DB
+        value: wallet_db
+
+  # Redis Cache  
+  - type: pserv
+    name: redis
+    env: docker
+    plan: free
+    dockerCommand: redis-server --appendonly yes
+
+  # API Gateway (Main Backend)
+  - type: web
+    name: api-gateway
+    env: docker
+    plan: free
+    dockerfilePath: ./backend/api-gateway/Dockerfile
+    dockerContext: ./backend/api-gateway
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: WALLET_SERVICE_ADDRESS
+        fromService:
+          name: wallet-service
+          type: pserv
+          property: hostport
+      - key: TRANSACTION_SERVICE_ADDRESS
+        fromService:
+          name: transaction-service
+          type: pserv
+          property: hostport
+      - key: BLOCKCHAIN_SERVICE_ADDRESS
+        fromService:
+          name: blockchain-service
+          type: pserv
+          property: hostport
+
+  # Wallet Service
+  - type: pserv
+    name: wallet-service
+    env: docker
+    plan: free
+    dockerfilePath: ./backend/wallet-service/Dockerfile
+    dockerContext: ./backend/wallet-service
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: wallet-db
+          property: connectionString
+      - key: GRPC_SERVER_PORT
+        value: 9091
+
+  # Transaction Service
+  - type: pserv
+    name: transaction-service
+    env: docker
+    plan: free
+    dockerfilePath: ./backend/transaction-service/Dockerfile
+    dockerContext: ./backend/transaction-service
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: GRPC_SERVER_PORT
+        value: 9092
+
+  # Blockchain Service
+  - type: pserv
+    name: blockchain-service
+    env: docker
+    plan: free
+    dockerfilePath: ./backend/blockchain-service/Dockerfile
+    dockerContext: ./backend/blockchain-service
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: GRPC_SERVER_PORT
+        value: 9093
+
+  # Frontend
+  - type: web
+    name: frontend
+    env: static
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: api-gateway
+          type: web
+          property: host
+
+databases:
+  - name: wallet-db
+    plan: free
+    databaseName: wallet_db
+    user: wallet_user
