@@ -24,6 +24,19 @@ grpc:
 cors:
   allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:5173}
 
+management:
+  health:
+    redis:
+      enabled: false
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
 logging:
   level:
     com.blockchain: DEBUG
