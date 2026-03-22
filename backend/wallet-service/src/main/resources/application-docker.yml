@@ -1,9 +1,4 @@
 spring:
-  profiles:
-    active: docker
-
----
-spring:
   config:
     activate:
       on-profile: docker
