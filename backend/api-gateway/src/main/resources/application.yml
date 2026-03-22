@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 spring:
   application:
@@ -26,16 +26,21 @@ cors:
 
 management:
   health:
+    defaults:
+      enabled: false
+    ping:
+      enabled: true
     redis:
       enabled: false
   endpoint:
     health:
       probes:
-        enabled: true
+        enabled: false
+      show-details: never
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,ping
 
 logging:
   level:
