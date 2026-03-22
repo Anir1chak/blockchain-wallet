@@ -1,0 +1,153 @@
+syntax = "proto3";
+
+package blockchain;
+
+option java_multiple_files = true;
+option java_package = "com.blockchain.blockchain.grpc";
+option java_outer_classname = "BlockchainProto";
+
+// Blockchain Service Definition
+service BlockchainService {
+  // Get balance for an address
+  rpc GetBalance(GetBalanceRequest) returns (BalanceResponse);
+  
+  // Get multiple balances
+  rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
+  
+  // Get current gas prices
+  rpc GetGasPrices(GetGasPricesRequest) returns (GasPricesResponse);
+  
+  // Get current block number
+  rpc GetBlockNumber(GetBlockNumberRequest) returns (BlockNumberResponse);
+  
+  // Validate an address
+  rpc ValidateAddress(ValidateAddressRequest) returns (ValidateAddressResponse);
+  
+  // Get token balance (ERC20)
+  rpc GetTokenBalance(GetTokenBalanceRequest) returns (TokenBalanceResponse);
+  
+  // Stream new blocks
+  rpc StreamBlocks(StreamBlocksRequest) returns (stream BlockUpdate);
+  
+  // Stream balance updates for addresses
+  rpc StreamBalanceUpdates(StreamBalanceRequest) returns (stream BalanceUpdate);
+  
+  // Get network status
+  rpc GetNetworkStatus(GetNetworkStatusRequest) returns (NetworkStatusResponse);
+}
+
+// Messages
+message GetBalanceRequest {
+  string address = 1;
+  string network = 2;
+}
+
+message BalanceResponse {
+  string address = 1;
+  string balance_wei = 2;
+  string balance_eth = 3;
+  string balance_usd = 4;
+  string network = 5;
+  int64 timestamp = 6;
+}
+
+message GetBalancesRequest {
+  repeated string addresses = 1;
+  string network = 2;
+}
+
+message GetBalancesResponse {
+  repeated BalanceResponse balances = 1;
+}
+
+message GetGasPricesRequest {
+  string network = 1;
+}
+
+message GasPricesResponse {
+  string slow = 1;
+  string standard = 2;
+  string fast = 3;
+  string instant = 4;
+  string base_fee = 5;
+  string network = 6;
+  int64 timestamp = 7;
+}
+
+message GetBlockNumberRequest {
+  string network = 1;
+}
+
+message BlockNumberResponse {
+  int64 block_number = 1;
+  string network = 2;
+  int64 timestamp = 3;
+}
+
+message ValidateAddressRequest {
+  string address = 1;
+}
+
+message ValidateAddressResponse {
+  bool is_valid = 1;
+  bool is_contract = 2;
+  string checksum_address = 3;
+}
+
+message GetTokenBalanceRequest {
+  string wallet_address = 1;
+  string token_address = 2;
+  string network = 3;
+}
+
+message TokenBalanceResponse {
+  string wallet_address = 1;
+  string token_address = 2;
+  string token_symbol = 3;
+  string token_name = 4;
+  int32 decimals = 5;
+  string balance = 6;
+  string balance_formatted = 7;
+}
+
+message StreamBlocksRequest {
+  string network = 1;
+}
+
+message BlockUpdate {
+  int64 block_number = 1;
+  string block_hash = 2;
+  int32 transaction_count = 3;
+  string gas_used = 4;
+  string gas_limit = 5;
+  int64 timestamp = 6;
+}
+
+message StreamBalanceRequest {
+  repeated string addresses = 1;
+  string network = 2;
+}
+
+message BalanceUpdate {
+  string address = 1;
+  string old_balance = 2;
+  string new_balance = 3;
+  string change = 4;
+  string tx_hash = 5;
+  int64 block_number = 6;
+  int64 timestamp = 7;
+}
+
+message GetNetworkStatusRequest {
+  string network = 1;
+}
+
+message NetworkStatusResponse {
+  string network = 1;
+  string chain_id = 2;
+  int64 latest_block = 3;
+  string peer_count = 4;
+  bool is_syncing = 5;
+  string gas_price = 6;
+  int64 timestamp = 7;
+}

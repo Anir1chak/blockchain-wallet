@@ -1,0 +1,180 @@
+syntax = "proto3";
+
+package transaction;
+
+option java_multiple_files = true;
+option java_package = "com.blockchain.transaction.grpc";
+option java_outer_classname = "TransactionProto";
+
+// Transaction Service Definition
+service TransactionService {
+  // Sign and broadcast a transaction
+  rpc SendTransaction(SendTransactionRequest) returns (TransactionResponse);
+  
+  // Get transaction by hash
+  rpc GetTransaction(GetTransactionRequest) returns (TransactionResponse);
+  
+  // Get transaction history for a wallet
+  rpc GetTransactionHistory(GetHistoryRequest) returns (TransactionHistoryResponse);
+  
+  // Estimate gas for a transaction
+  rpc EstimateGas(EstimateGasRequest) returns (GasEstimateResponse);
+  
+  // Create pending multi-sig transaction
+  rpc CreateMultiSigTransaction(CreateMultiSigTxRequest) returns (MultiSigTxResponse);
+  
+  // Sign a pending multi-sig transaction
+  rpc SignMultiSigTransaction(SignMultiSigTxRequest) returns (MultiSigTxResponse);
+  
+  // Get pending multi-sig transactions
+  rpc GetPendingMultiSigTransactions(GetPendingMultiSigTxRequest) returns (PendingMultiSigTxResponse);
+  
+  // Execute multi-sig transaction (when threshold reached)
+  rpc ExecuteMultiSigTransaction(ExecuteMultiSigTxRequest) returns (TransactionResponse);
+  
+  // Stream transaction status updates
+  rpc StreamTransactionStatus(StreamTxStatusRequest) returns (stream TransactionStatusUpdate);
+}
+
+// Enums
+enum TransactionStatus {
+  PENDING = 0;
+  CONFIRMED = 1;
+  FAILED = 2;
+  CANCELLED = 3;
+}
+
+enum TransactionType {
+  SEND = 0;
+  RECEIVE = 1;
+  SWAP = 2;
+  CONTRACT_CALL = 3;
+}
+
+enum GasSpeed {
+  SLOW = 0;
+  STANDARD = 1;
+  FAST = 2;
+  INSTANT = 3;
+}
+
+// Messages
+message SendTransactionRequest {
+  string wallet_id = 1;
+  string to_address = 2;
+  string amount = 3; // In Wei
+  string password = 4;
+  GasSpeed gas_speed = 5;
+  string data = 6; // Optional contract data
+}
+
+message TransactionResponse {
+  string tx_hash = 1;
+  string from_address = 2;
+  string to_address = 3;
+  string amount = 4;
+  string gas_price = 5;
+  string gas_used = 6;
+  TransactionStatus status = 7;
+  TransactionType type = 8;
+  int64 block_number = 9;
+  int64 timestamp = 10;
+  string network = 11;
+}
+
+message GetTransactionRequest {
+  string tx_hash = 1;
+  string network = 2;
+}
+
+message GetHistoryRequest {
+  string wallet_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  TransactionType filter_type = 4;
+}
+
+message TransactionHistoryResponse {
+  repeated TransactionResponse transactions = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message EstimateGasRequest {
+  string from_address = 1;
+  string to_address = 2;
+  string amount = 3;
+  string data = 4;
+  string network = 5;
+}
+
+message GasEstimateResponse {
+  string gas_limit = 1;
+  string slow_gas_price = 2;
+  string standard_gas_price = 3;
+  string fast_gas_price = 4;
+  string instant_gas_price = 5;
+  string slow_total_cost = 6;
+  string standard_total_cost = 7;
+  string fast_total_cost = 8;
+  string instant_total_cost = 9;
+}
+
+message CreateMultiSigTxRequest {
+  string wallet_id = 1;
+  string initiator_address = 2;
+  string to_address = 3;
+  string amount = 4;
+  string description = 5;
+}
+
+message MultiSigTxResponse {
+  string multisig_tx_id = 1;
+  string wallet_id = 2;
+  string to_address = 3;
+  string amount = 4;
+  string description = 5;
+  int32 signatures_collected = 6;
+  int32 signatures_required = 7;
+  repeated SignatureInfo signatures = 8;
+  string status = 9;
+  int64 created_at = 10;
+  int64 expires_at = 11;
+}
+
+message SignatureInfo {
+  string signer_address = 1;
+  string signature = 2;
+  int64 signed_at = 3;
+}
+
+message SignMultiSigTxRequest {
+  string multisig_tx_id = 1;
+  string signer_address = 2;
+  string password = 3;
+}
+
+message GetPendingMultiSigTxRequest {
+  string wallet_id = 1;
+}
+
+message PendingMultiSigTxResponse {
+  repeated MultiSigTxResponse pending_transactions = 1;
+}
+
+message ExecuteMultiSigTxRequest {
+  string multisig_tx_id = 1;
+}
+
+message StreamTxStatusRequest {
+  string tx_hash = 1;
+}
+
+message TransactionStatusUpdate {
+  string tx_hash = 1;
+  TransactionStatus status = 2;
+  int64 block_number = 3;
+  int32 confirmations = 4;
+  int64 timestamp = 5;
+}

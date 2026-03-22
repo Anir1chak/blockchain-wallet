@@ -1,0 +1,137 @@
+syntax = "proto3";
+
+package wallet;
+
+option java_multiple_files = true;
+option java_package = "com.blockchain.wallet.grpc";
+option java_outer_classname = "WalletProto";
+
+// Wallet Service Definition
+service WalletService {
+  // Create a new wallet
+  rpc CreateWallet(CreateWalletRequest) returns (CreateWalletResponse);
+  
+  // Get wallet by ID
+  rpc GetWallet(GetWalletRequest) returns (WalletResponse);
+  
+  // Get all wallets for a user
+  rpc GetUserWallets(GetUserWalletsRequest) returns (GetUserWalletsResponse);
+  
+  // Import wallet from private key or mnemonic
+  rpc ImportWallet(ImportWalletRequest) returns (CreateWalletResponse);
+  
+  // Create multi-sig wallet
+  rpc CreateMultiSigWallet(CreateMultiSigRequest) returns (MultiSigWalletResponse);
+  
+  // Get multi-sig wallet details
+  rpc GetMultiSigWallet(GetMultiSigRequest) returns (MultiSigWalletResponse);
+  
+  // Add signer to multi-sig
+  rpc AddSigner(AddSignerRequest) returns (MultiSigWalletResponse);
+  
+  // Remove signer from multi-sig
+  rpc RemoveSigner(RemoveSignerRequest) returns (MultiSigWalletResponse);
+}
+
+// Enums
+enum WalletType {
+  SINGLE_SIG = 0;
+  MULTI_SIG = 1;
+}
+
+enum NetworkType {
+  ETHEREUM_MAINNET = 0;
+  ETHEREUM_SEPOLIA = 1;
+  POLYGON_MAINNET = 2;
+  POLYGON_MUMBAI = 3;
+}
+
+// Messages
+message CreateWalletRequest {
+  string user_id = 1;
+  string name = 2;
+  NetworkType network = 3;
+  string password = 4;
+}
+
+message CreateWalletResponse {
+  string wallet_id = 1;
+  string address = 2;
+  string mnemonic = 3; // Only returned on creation, store securely!
+  string name = 4;
+  NetworkType network = 5;
+  int64 created_at = 6;
+}
+
+message GetWalletRequest {
+  string wallet_id = 1;
+}
+
+message WalletResponse {
+  string wallet_id = 1;
+  string address = 2;
+  string name = 3;
+  WalletType type = 4;
+  NetworkType network = 5;
+  int64 created_at = 6;
+  int64 updated_at = 7;
+}
+
+message GetUserWalletsRequest {
+  string user_id = 1;
+}
+
+message GetUserWalletsResponse {
+  repeated WalletResponse wallets = 1;
+}
+
+message ImportWalletRequest {
+  string user_id = 1;
+  string name = 2;
+  NetworkType network = 3;
+  string password = 4;
+  oneof import_type {
+    string private_key = 5;
+    string mnemonic = 6;
+  }
+}
+
+message CreateMultiSigRequest {
+  string user_id = 1;
+  string name = 2;
+  NetworkType network = 3;
+  int32 threshold = 4; // Number of required signatures
+  repeated string signer_addresses = 5;
+}
+
+message MultiSigWalletResponse {
+  string wallet_id = 1;
+  string address = 2;
+  string name = 3;
+  NetworkType network = 4;
+  int32 threshold = 5;
+  int32 total_signers = 6;
+  repeated Signer signers = 7;
+  int64 created_at = 8;
+}
+
+message Signer {
+  string address = 1;
+  string name = 2;
+  bool is_owner = 3;
+}
+
+message GetMultiSigRequest {
+  string wallet_id = 1;
+}
+
+message AddSignerRequest {
+  string wallet_id = 1;
+  string signer_address = 2;
+  string signer_name = 3;
+}
+
+message RemoveSignerRequest {
+  string wallet_id = 1;
+  string signer_address = 2;
+}
