@@ -6,11 +6,8 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copy proto and source code
-COPY proto ./proto
+# Copy source code and build
 COPY src ./src
-
-# Build
 RUN mvn clean package -DskipTests -B
 
 # Runtime stage
