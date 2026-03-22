@@ -11,11 +11,8 @@ import MultiSigList from './pages/MultiSigList';
 import CreateWallet from './pages/CreateWallet';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import { useAuthStore } from './store/authStore';
 
 function App() {
-  const { isAuthenticated } = useAuthStore();
-
   return (
     <Router>
       <Toaster 

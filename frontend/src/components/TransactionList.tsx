@@ -14,7 +14,7 @@ interface TransactionListProps {
   showWalletAddress?: boolean;
 }
 
-export default function TransactionList({ transactions, showWalletAddress = false }: TransactionListProps) {
+export default function TransactionList({ transactions }: TransactionListProps) {
   // Ensure transactions is always an array
   const txList = Array.isArray(transactions) ? transactions : [];
   

@@ -20,7 +20,7 @@ export default function CreateWallet() {
   const [step, setStep] = useState(1);
   const [walletType, setWalletType] = useState<WalletType>('STANDARD');
   const [name, setName] = useState('');
-  const [network, setNetwork] = useState('ETHEREUM_SEPOLIA');
+  const [network] = useState('ETHEREUM_SEPOLIA');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [mnemonic, setMnemonic] = useState('');
