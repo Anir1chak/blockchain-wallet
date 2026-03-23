@@ -22,8 +22,22 @@ interface AuthState {
   clearError: () => void;
 }
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL ||
+  'https://api-gateway-production-9121.up.railway.app'
+).replace(/\/$/, '');
 const API_URL = `${API_BASE_URL}/api/auth`;
+
+const parseErrorMessage = async (response: Response, fallback: string) => {
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    const data = await response.json();
+    return data.message || fallback;
+  }
+
+  const text = await response.text();
+  return text?.trim() || fallback;
+};
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -44,8 +58,8 @@ export const useAuthStore = create<AuthState>()(
           });
 
           if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.message || 'Login failed');
+            const message = await parseErrorMessage(response, 'Login failed');
+            throw new Error(message);
           }
 
           const data = await response.json();
@@ -74,8 +88,8 @@ export const useAuthStore = create<AuthState>()(
           });
 
           if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.message || 'Signup failed');
+            const message = await parseErrorMessage(response, 'Signup failed');
+            throw new Error(message);
           }
 
           const data = await response.json();
