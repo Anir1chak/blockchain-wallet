@@ -63,8 +63,14 @@ export const useAuthStore = create<AuthState>()(
           }
 
           const data = await response.json();
+          const user = data.user || {
+            id: data.userId,
+            email: data.email,
+            name: data.name,
+            createdAt: Date.now(),
+          };
           set({
-            user: data.user,
+            user,
             token: data.token,
             isAuthenticated: true,
             isLoading: false,
@@ -93,8 +99,14 @@ export const useAuthStore = create<AuthState>()(
           }
 
           const data = await response.json();
+          const user = data.user || {
+            id: data.userId,
+            email: data.email,
+            name: data.name,
+            createdAt: Date.now(),
+          };
           set({
-            user: data.user,
+            user,
             token: data.token,
             isAuthenticated: true,
             isLoading: false,
